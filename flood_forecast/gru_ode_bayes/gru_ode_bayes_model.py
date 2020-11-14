@@ -2,7 +2,7 @@ import torch
 import math
 import numpy as np
 from torchdiffeq import odeint
-from typing import Optional, Tuple,
+from typing import Optional, Tuple
 
 
 class _GRUODECell(torch.nn.Module):
