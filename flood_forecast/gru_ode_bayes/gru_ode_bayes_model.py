@@ -2,7 +2,7 @@ import torch
 import math
 import numpy as np
 from torchdiffeq import odeint
-from typing import Optional
+from typing import Optional, Tuple
 
 class _GRUODECell(torch.nn.Module):
     """predicts continuous function in between datapoints
