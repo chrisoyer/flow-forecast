@@ -2,7 +2,7 @@ import torch
 import math
 import numpy as np
 from torchdiffeq import odeint
-from typing import Optional, Tuple, Bool
+from typing import Optional, Tuple, 
 
 class _GRUODECell(torch.nn.Module):
     """predicts continuous function in between datapoints
@@ -178,7 +178,7 @@ class NNFOwithBayesianJumps(torch.nn.Module):
     def __init__(self, input_size, hidden_size, p_hidden, prep_hidden, bias=True, 
                  cov_size=1, cov_hidden=1, classification_hidden=1, 
                  use_logvar=True, 
-                 mixing=1, dropout_rate:float=0, minimal:Bool=False, 
+                 mixing=1, dropout_rate:float=0, minimal:bool=False, 
                  solver:str="euler", impute = True, store_hist: bool=False):
         super().__init__()
 
