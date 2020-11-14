@@ -9,10 +9,10 @@ class _GRUODECell(torch.nn.Module):
     """predicts continuous function in between datapoints
     hidden states can up updated jointly
     Args:
-        input_size:
-        hidden_size:
+        input_size: features in input data
+        hidden_size: size of hidden state. If blank, will be 2x input size
         bias: include bias in neurons
-        impute: 
+        impute: if True, will use Zeros matrix instead of x
         minimal: implement 'minimal' version per appendix G
     Returns: instantiated cell
 
@@ -44,7 +44,7 @@ class _GRUODECell(torch.nn.Module):
                                       bias=False)
 
     def forward(self, x: Optional[torch.Tensor], hidden_state: torch.Tensor,
-                delta_t: int) -> torch.Tensor:
+                delta_t: float) -> torch.Tensor:
         """
         Returns a change due to one step of using GRU-ODE for all h.
         Args:
@@ -120,6 +120,7 @@ class _GRUObservationCell(torch.nn.Module):
             loss = 0.5 * ((torch.pow(error, 2) + torch.log(adjusted_var)) * M_obs).sum()
 
         # TODO: try removing X_obs (they are included in error)
+        # create input from desc. stats of existing model output
         gru_input = torch.stack([X_obs, mean, adjusted_var, error], dim=2).unsqueeze(2)
         gru_input = torch.matmul(gru_input, self.w_prep).squeeze(2) + self.bias_prep
         gru_input.relu_()
@@ -406,6 +407,7 @@ def compute_KL_loss(p_obs: torch.Tensor, X_obs: torch.Tensor,
         std = torch.pow(torch.abs(var) + 1e-5, 0.5)
 
     def gaussian_KL(mu_1, mu_2, sigma_1, sigma_2):
+        """gaussian properties are assumption, cf https://arxiv.org/pdf/2006.04727.pdf"""
         return (torch.log(sigma_2) - torch.log(sigma_1) +
                 (torch.pow(sigma_1, 2) + torch.pow((mu_1 - mu_2), 2)) / (2 * sigma_2**2) - 0.5)
 
