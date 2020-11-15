@@ -5,7 +5,7 @@ from typing import Optional
 class gru_ode_bayes(object):
     """
     """
-    __init__(self, "hidden_size": int=50, "p_hidden": int=25, 
+    def __init__(self, "hidden_size": int=50, "p_hidden": int=25, 
              "prep_hidden": int=10, "use_logvar": bool=True, "mixing": float=1e-4, 
              "delta_t": float=0.1, "T"=200, "lambda_": float=0, #Weighting between classification and MSE loss.
              "classification_hidden": int=2, "cov_hidden": int=50, 
@@ -48,12 +48,24 @@ class gru_ode_bayes(object):
                             weight_decay=self.weight_decay)
 
 
-    fit(X: np.array=None, y: np.array=None, X_val: Optional[np.array], 
+    def _load_batch(self, data: dict=self.raw_dload, include_val:bool=False) -> None:
+        """loads another batch of records into data_load attribute, for dumping
+        into model"""
+        self.data_load = {'times': data["times"], 'time_indices': data["time_indices"],
+            'X': data["X"].to(self.device), 'M': data["M"].to(self.device),
+            'obs_idx': data["obs_idx"], 'delta_t'=data["delta_t"], 
+            'T'=data["T"], 'cov'=data["cov"].to(self.device)}
+        if include_val:
+            self.data_load.update({'X_val': data["X_val"].to(device), 
+                'M_val': data["M_val"].to(device), 'times_val': data["times_val"],
+                'times_idx': data["index_val"]}
+
+    def fit(self, X: np.array=None, y: np.array=None, X_val: Optional[np.array], 
         y_val: Optional[np.array]=None, val_frac: Optional[float],
          epoch_max:int=200) -> gru_ode_bayes:
         """fits model to data"""
         self.X = X
-        self.X_loader = torch.utils.data.DataLoader(dataset=X,
+        self.raw_dload = torch.utils.data.DataLoader(dataset=X,
             collate_fn=data_utils.custom_collate_fn, shuffle=True, 
             batch_size=100, num_workers=4)
         self.y = y
@@ -63,16 +75,8 @@ class gru_ode_bayes(object):
             model.train()
             optimizer.zero_grad()
             for i, data in tqdm.tqdm(enumerate(self.X)):
-
-                times    = b["times"]
-                time_ptr = b["time_ptr"]
-                X        = b["X"].to(device)
-                M        = b["M"].to(device)
-                obs_idx  = b["obs_idx"]
-                cov      = b["cov"].to(device)
-
-                y = b["y"]
-                hT, loss, _, _  = model(times, time_ptr, X, M, obs_idx, delta_t=delta_t, T=T, cov=cov)
+                self._load_batch()
+                self.hT, self.loss, _, _  = self.model(**self.data_load)
 
                 loss.backward()
                 if i%10==0:
@@ -85,19 +89,9 @@ class gru_ode_bayes(object):
                 num_obs  = 0
                 model.eval()
                 for i, b in enumerate(dl_val):
-                    times    = b["times"]
-                    time_ptr = b["time_ptr"]
-                    X        = b["X"].to(device)
-                    M        = b["M"].to(device)
-                    obs_idx  = b["obs_idx"]
-                    cov      = b["cov"].to(device)
-
-                    X_val     = b["X_val"].to(device)
-                    M_val     = b["M_val"].to(device)
-                    times_val = b["times_val"]
-                    times_idx = b["index_val"]
-
-                    y = b["y"]
+                    self._load_batch(include_val=True)
+                    # does this even get used??
+                    y = self.raw_dload["y"]
 
                     hT, loss, _, t_vec, p_vec, h_vec, eval_times,_ = model(times, time_ptr, X, M, obs_idx, delta_t=delta_t, T=T, cov=cov, return_path=True)
                     t_vec = np.around(t_vec,str(delta_t)[::-1].find('.')).astype(np.float32) #Round floating points error in the time vector.
