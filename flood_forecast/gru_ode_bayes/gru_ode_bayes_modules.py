@@ -1,3 +1,5 @@
+# code to create torch components
+
 import torch
 import math
 import numpy as np
@@ -255,14 +257,14 @@ class NNFOwithBayesianJumps(torch.nn.Module):
         return h, p, current_time, eval_times, eval_ps
 
 
-def forward(self, times: np.array, time_ptr, X: torch.Tensor,
+def forward(self, times: np.array, time_indices: int, X: torch.Tensor,
             M: torch.Tensor, obs_idx, delta_t: float, T, cov,
             return_path=False, smoother=False, class_criterion=None,
             labels=None) -> list:
     """
     Args:
         times         vetor of observation times
-        time_ptr      start indices of data for a given time
+        time_indices  start indices of data for a given time
         X             data tensor
         M             mask tensor (1.0 if observed, 0.0 if unobserved)
         obs_idx       observed patients of each datapoint (indexed within the current minibatch)
@@ -293,7 +295,7 @@ def forward(self, times: np.array, time_ptr, X: torch.Tensor,
         num_evals_vec = torch.zeros(cov.shape[0], device=h.device)
         assert class_criterion is not None
 
-    assert len(times) + 1 == len(time_ptr)
+    assert len(times) + 1 == len(time_indices)
     assert (len(times) == 0) or (times[-1] <= T)
 
     eval_times_total = torch.tensor([], dtype=torch.float64, device=h.device)
@@ -318,8 +320,8 @@ def forward(self, times: np.array, time_ptr, X: torch.Tensor,
                 path_h.append(h)
 
         # Reached an observation
-        start = time_ptr[i]
-        end = time_ptr[i + 1]
+        start = time_indices[i]
+        end = time_indices[i + 1]
 
         X_obs = X[start:end]
         M_obs = M[start:end]
