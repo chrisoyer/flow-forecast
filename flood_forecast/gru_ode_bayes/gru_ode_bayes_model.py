@@ -8,7 +8,7 @@ class GRU_ODE_Bayes_Classifier(object):
     """
     def __init__(self, hidden_size: int=50, p_hidden: int=25, 
              prep_hidden: int=10, use_logvar: bool=True, mixing: float=1e-4, 
-             delta_t: float=0.1, T=200, lambda_: float=0, #Weighting between classification and MSE loss.
+             delta_t: float=0.1, lambda_: float=0, #Weighting between classification and MSE loss.
              classification_hidden: int=2, cov_hidden: int=50, 
              weight_decay: float=0.0001, dropout_rate:float=0.2, 
              lr: float=0.001, full_gru_ode=True, no_cov: bool=True, 
