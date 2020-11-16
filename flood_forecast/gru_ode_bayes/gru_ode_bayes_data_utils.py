@@ -108,7 +108,7 @@ class ODE_Dataset(Dataset):
         self.cov_df = cov_df
         if self.cov_df is None:
             self.cov_df = (pd.DataFrame({"ID":self.data_df["ID"].unique()}
-                           .assign(Cov=0}))
+                           .assign(Cov=0))
         assert self.cov_df.columns[0]=="ID"
         
         self.label_df = label_df
