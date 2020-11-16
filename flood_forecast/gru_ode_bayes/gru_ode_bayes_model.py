@@ -127,8 +127,8 @@ class GRU_ODE_Bayes_Classifier(object):
 
 
 
-    def fit(self, data_source: str=None, X: np.array=None, X_val: Optional[np.array], 
-            val_frac: Optional[float],
+    def fit(self, data_source: str=None, X: np.array=None, #X_val: Optional[np.array], 
+            val_frac: Optional[float]=None,
              epoch_max:int=200) -> object:
         """fits model to data
         Arguments:
