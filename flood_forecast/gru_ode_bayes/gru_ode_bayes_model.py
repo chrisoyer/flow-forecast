@@ -85,17 +85,21 @@ class GRU_ODE_Bayes_Classifier(object):
                             weight_decay=self.weight_decay)
 
 
-    def _load_batch(self, data: dict=self.raw_dload, include_val:bool=False) -> None:
+    def _load_batch(self, include_val:bool=False) -> None:
         """loads another batch of records into data_load attribute, for dumping
         into model"""
-        self.data_load = {'times': data["times"], 'time_indices': data["time_indices"],
-            'X': data["X"].to(self.device), 'M': data["M"].to(self.device),
-            'obs_idx': data["obs_idx"], 'delta_t': data["delta_t"], 
-            'T': data["T"], 'cov': data["cov"].to(self.device)}
+        self.data_load = {'times': self.raw_dload["times"], 
+            'time_indices': self.raw_dload["time_indices"],
+            'X': self.raw_dload["X"].to(self.device), 
+            'M': self.raw_dload["M"].to(self.device),
+            'obs_idx': self.raw_dload["obs_idx"], 
+            'delta_t': self.raw_dload["delta_t"], 
+            'T': self.raw_dload["T"], 'cov': self.raw_dload["cov"].to(self.device)}
         if include_val:
-            self.data_load.update({'X_val': data["X_val"].to(device), 
-                'M_val': data["M_val"].to(device), 'times_val': data["times_val"],
-                'times_idx': data["index_val"]})
+            self.data_load.update({'X_val': self.raw_dload["X_val"].to(device), 
+                'M_val': self.raw_dload["M_val"].to(device), 
+                'times_val': self.raw_dload["times_val"],
+                'times_idx': self.raw_dload["index_val"]})
     
     def _extract_from_path(self, t_vec:np.array, p_vec:np.array, eval_times:np.array,
                            path_idx_eval:int) -> np.array:
