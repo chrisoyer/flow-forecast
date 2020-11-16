@@ -79,7 +79,7 @@ class GRU_ODE_Bayes_Classifier(object):
              "use_logvar", "mixing", "delta_t", "T", "lambda_",
              "classification_hidden", "cov_hidden", "dropout_rate", 
              "full_gru_ode", "no_cov", "impute", "T_val", 
-             "max_val_samples" "solver"] # clump these to pass to NNFOwithBayesianJumps
+             "max_val_samples", "solver"] # clump these to pass to NNFOwithBayesianJumps
         self.model = (modules.NNFOwithBayesianJumps({attr: eval(f"self.{attr}") 
                                            for attr in self.model_attributes})
                                            .to(self.device))
