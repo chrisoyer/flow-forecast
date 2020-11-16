@@ -52,7 +52,7 @@ def custom_collate_fn(batch):
         "pat_idx": pat_idx,
         "times": times,
         "time_indices": time_indices,
-        "X": df.iloc[:, value_cols].to_numpy()),
+        "X": df.iloc[:, value_cols].to_numpy(),
         "M": df.iloc[:, mask_cols].to_numpy(),
         "obs_idx": torch.tensor(batch_ids),
         "y": labels,
