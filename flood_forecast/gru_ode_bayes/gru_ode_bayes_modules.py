@@ -36,14 +36,11 @@ class _GRUODECell(torch.nn.Module):
             self.hidden_size = 2 * input_size
         self.bias = bias
         self.impute = impute
-        self.lin_xz = torch.nn.Linear(in_features=input_size, out_features=hidden_size,
-                                      bias=bias)
-        self.lin_xn = torch.nn.Linear(in_features=input_size, out_features=hidden_size,
-                                      bias=bias)
-        self.lin_hz = torch.nn.Linear(in_features=hidden_size, out_features=hidden_size,
-                                      bias=False)
-        self.lin_hn = torch.nn.Linear(in_features=hidden_size, out_features=hidden_size,
-                                      bias=False)
+        self.lin_xz = torch.nn.Linear(in_features=self.input_size, 
+                                  out_features=self.hidden_size, bias=self.bias)
+        self.lin_xn = torch.nn.Linear(self.input_size, self.hidden_size, self.bias)
+        self.lin_hz = torch.nn.Linear(self.hidden_size, self.hidden_size, False)
+        self.lin_hn = torch.nn.Linear(self.hidden_size, self.hidden_size, False)
 
     def forward(self, x: Optional[torch.Tensor], hidden_state: torch.Tensor,
                 delta_t: float) -> torch.Tensor:
@@ -56,7 +53,7 @@ class _GRUODECell(torch.nn.Module):
         Returns:
             Updated hidden state
         """
-        if self.impute:  # ie non-autonomous
+        if self.impute:  # ie non-autonomous in original code
             xz = xn = torch.zeros_like(hidden_state)
         else:  # 'autonomous in original implementation
             xz = self.lin_xz(x)
@@ -67,9 +64,9 @@ class _GRUODECell(torch.nn.Module):
         # g in paper; n in author's code
         update_vec = torch.tanh(xn + self.lin_hn(updated_gate * hidden_state))
 
-        # Reset gate state: n in original code
+        # Reset_gate state: n in original code
         if self.minimal:
-            reset_get = updated_gate
+            reset_gate = updated_gate
         else:
             reset_gate = torch.sigmoid(xr + self.lin_hr(hidden_state))
 
@@ -84,11 +81,10 @@ class _GRUObservationCell(torch.nn.Module):
         prep_hidden:
         bias: include bias term
         logvar: Use log variance, false-> use variance
-
     """
 
     def __init__(self, input_size: int, hidden_size: int, prep_hidden: int,
-                 bias: bool = True, use_logvar: bool = False):
+                 bias: bool=True, use_logvar: bool=False) -> None:
         super().__init__()
         self.gru_d = torch.nn.GRUCell(prep_hidden * input_size, hidden_size, bias=bias)
 
@@ -99,7 +95,7 @@ class _GRUObservationCell(torch.nn.Module):
         self.use_logvar = use_logvar
         self.input_size = input_size
         self.prep_hidden = prep_hidden
-        self.var_eps = 1e-6
+        self.var_eps =1e-6
 
     def forward(self, h, p, X_obs, M_obs, i_obs) -> Tuple[torch.Tensor, float]:
         # only updating rows that have observations
@@ -116,10 +112,11 @@ class _GRUObservationCell(torch.nn.Module):
 
         if self.use_logvar:
             log_lik_c = np.log(np.sqrt(2 * np.pi))
-            loss = 0.5 * ((torch.pow(error, 2) + logvar + 2 * log_lik_c) * M_obs)
+            # check - should this be .sum()???
+            loss = 0.5 * ((torch.pow(error, 2) + logvar + 2*log_lik_c) * M_obs)
         else:
             # log normal loss, over all observations
-            loss = 0.5 * ((torch.pow(error, 2) + torch.log(adjusted_var)) * M_obs).sum()
+            loss = 0.5 * ((torch.pow(error, 2) + torch.log(adjusted_var))*M_obs).sum()
 
         # TODO: try removing X_obs (they are included in error)
         # create input from desc. stats of existing model output
@@ -225,14 +222,26 @@ class NNFOwithBayesianJumps(torch.nn.Module):
         self.apply(init_weights)
 
     def ode_step(self, h, p, delta_t, current_time):
-        """Executes a single ODE step."""
+        """Executes a single ODE step.
+        Args:
+            h: hidden state?
+            p: 
+            delta_t: timestep increment
+            current_time
+        Returns:
+            h: hidden state?
+            p:
+            current_time:
+            eval_times:
+            eval_ps:
+        """
         eval_times = torch.tensor([0], device=h.device, dtype=torch.float64)
         eval_ps = torch.tensor([0], device=h.device, dtype=torch.float32)
         if self.impute is False:
             p = torch.zeros_like(p)
 
         if self.solver == "euler":
-            h = h + delta_t * self.gru_c(p, h)
+            h = h + delta_t * self.gru_c(input_size=p, hidden_size=h)
             p = self.p_model(h)
 
         elif self.solver == "midpoint":
@@ -257,138 +266,139 @@ class NNFOwithBayesianJumps(torch.nn.Module):
         return h, p, current_time, eval_times, eval_ps
 
 
-def forward(self, times: np.array, time_indices: int, X: torch.Tensor,
-            M: torch.Tensor, obs_idx, delta_t: float, T, cov,
-            return_path=False, smoother=False, class_criterion=None,
-            labels=None) -> list:
-    """
-    Args:
-        times         vetor of observation times
-        time_indices  start indices of data for a given time
-        X             data tensor
-        M             mask tensor (1.0 if observed, 0.0 if unobserved)
-        obs_idx       observed patients of each datapoint (indexed within the current minibatch)
-        delta_t       time step for Euler
-        T             total time
-        cov           static covariates for learning the first h0
-        return_path   whether to return the path of h
-    Returns:
-        h             hidden state at final time (T)
-        loss          loss of the Gaussian observations
-    """
+    def forward(self, times: np.array, time_indices: int, X: torch.Tensor,
+                M: torch.Tensor, obs_idx, delta_t: float, T, cov,
+                return_path=False, smoother=False, class_criterion=None,
+                labels=None) -> list:
+        """
+        Args:
+            times         vector of observation times
+            time_indices  start indices of data for a given time
+            X             data tensor
+            M             mask tensor (1.0 if observed, 0.0 if unobserved)
+            obs_idx       observed patients of each datapoint (indexed within the current minibatch)
+            delta_t       time step for Euler
+            T             total time
+            cov           static covariates for learning the first h0
+            return_path   whether to return the path of hidden state
+            class_criterion
+        Returns:
+            h             hidden state at final time (T)
+            loss          loss of the Gaussian observations
+        """
 
-    h = self.covariates_map(cov)
-    p = self.p_model(h)
-    current_time = 0.0
-    counter = 0
+        h = self.covariates_map(cov)
+        p = self.p_model(h)
+        current_time = 0.0
+        counter = 0
 
-    prejump_loss = 0  # frmly loss_1
-    postjump_loss = 0  # KL between p_updated and the actual sample
+        prejump_loss = 0  # frmly loss_1, from ODE
+        postjump_loss = 0  # KL between p_updated and the actual sample
 
-    if return_path:
-        path_t = [0]
-        path_p = [p]
-        path_h = [h]
+        if return_path:
+            path_t = [0]
+            path_p = [p]
+            path_h = [h]
 
-    if smoother:
-        class_loss_vec = torch.zeros(cov.shape[0], device=h.device)
-        num_evals_vec = torch.zeros(cov.shape[0], device=h.device)
-        assert class_criterion is not None
+        if smoother:
+            class_loss_vec = torch.zeros(cov.shape[0], device=h.device)
+            num_evals_vec = torch.zeros(cov.shape[0], device=h.device)
+            assert class_criterion is not None
 
-    assert len(times) + 1 == len(time_indices)
-    assert (len(times) == 0) or (times[-1] <= T)
+        assert len(times) + 1 == len(time_indices)
+        assert (len(times) == 0) or (times[-1] <= T)
 
-    eval_times_total = torch.tensor([], dtype=torch.float64, device=h.device)
-    eval_vals_total = torch.tensor([], dtype=torch.float32, device=h.device)
+        eval_times_total = torch.tensor([], dtype=torch.float64, device=h.device)
+        eval_vals_total = torch.tensor([], dtype=torch.float32, device=h.device)
 
-    for i, obs_time in enumerate(times):
-        # Propagation of the ODE until next observation
-        frac_of_delta_t = .001  # for numerical consistancy
-        while current_time < (obs_time - frac_of_delta_tr * delta_t):
+        for i, obs_time in enumerate(times):
+            # Propagation of the ODE until next observation
+            frac_of_delta_t = .001  # for numerical consistancy
+            while current_time < (obs_time - frac_of_delta_tr*delta_t):
 
+                if self.solver == "dopri5":
+                    h, p, current_time, eval_times, eval_ps = self.ode_step(h, p, obs_time - current_time, current_time)
+                else:
+                    h, p, current_time, eval_times, eval_ps = self.ode_step(h, p, delta_t, current_time)
+                eval_times_total = torch.cat((eval_times_total, eval_times))
+                eval_vals_total = torch.cat((eval_vals_total, eval_ps))
+
+                # Storing the predictions.
+                if return_path:
+                    path_t.append(current_time)
+                    path_p.append(p)
+                    path_h.append(h)
+
+            # Reached an observation
+            start = time_indices[i]
+            end = time_indices[i + 1]
+
+            X_obs = X[start:end]
+            M_obs = M[start:end]
+            i_obs = obs_idx[start:end]
+
+            # Using GRUObservationCell to update h. Also updating p and loss
+            h, losses = self.gru_obs(h, p, X_obs, M_obs, i_obs)
+
+            if smoother:
+                class_loss_vec[i_obs] += class_criterion(
+                    self.classification_model(h[i_obs]), labels[i_obs]).squeeze(1)
+                num_evals_vec[i_obs] += 1
+            prejump_loss = prejump_loss + losses.sum()
+            p = self.p_model(h)
+
+            postjump_loss += compute_KL_loss(p_obs=p[i_obs], X_obs=X_obs,
+                                            M_obs=M_obs, logvar=self.use_logvar)
+
+            if return_path:
+                path_t.append(obs_time)
+                path_p.append(p)
+                path_h.append(h)
+
+        # after every observation has been processed, propagating until T
+        while current_time < T:
+            timestep
             if self.solver == "dopri5":
-                h, p, current_time, eval_times, eval_ps = self.ode_step(h, p, obs_time - current_time, current_time)
+                timestep = T - current_time
             else:
-                h, p, current_time, eval_times, eval_ps = self.ode_step(h, p, delta_t, current_time)
+                timestep = delta_t
+            h, p, current_time, eval_times, eval_ps = self.ode_step(h, p,
+                                                                    timestep, current_time)
             eval_times_total = torch.cat((eval_times_total, eval_times))
             eval_vals_total = torch.cat((eval_vals_total, eval_ps))
 
-            # Storing the predictions.
+            # Storing the predictions
             if return_path:
                 path_t.append(current_time)
                 path_p.append(p)
                 path_h.append(h)
 
-        # Reached an observation
-        start = time_indices[i]
-        end = time_indices[i + 1]
-
-        X_obs = X[start:end]
-        M_obs = M[start:end]
-        i_obs = obs_idx[start:end]
-
-        # Using GRUObservationCell to update h. Also updating p and loss
-        h, losses = self.gru_obs(h, p, X_obs, M_obs, i_obs)
+        loss = prejump_loss + self.mixing * postjump_loss
 
         if smoother:
-            class_loss_vec[i_obs] += class_criterion(
-                self.classification_model(h[i_obs]), labels[i_obs]).squeeze(1)
-            num_evals_vec[i_obs] += 1
-        prejump_loss = prejump_loss + losses.sum()
-        p = self.p_model(h)
+            class_loss_vec += class_criterion(self.classification_model(h), labels).squeeze(1)
+            class_loss_vec /= num_evals_vec
 
-        postjump_loss += compute_KL_loss(p_obs=p[i_obs], X_obs=X_obs,
-                                         M_obs=M_obs, logvar=self.use_logvar)
+        class_pred = self.classification_model(h)
 
+        results = [h, loss, class_pred]
         if return_path:
-            path_t.append(obs_time)
-            path_p.append(p)
-            path_h.append(h)
-
-    # after every observation has been processed, propagating until T
-    while current_time < T:
-        timestep
-        if self.solver == "dopri5":
-            timestep = T - current_time
+            results.extend([np.array(path_t), torch.stack(path_p), torch.stack(path_h)])
+            if smoother:
+                results.extend([class_loss_vec])
+            else:
+                results.extend([eval_times_total, eval_vals_total])
         else:
-            timestep = delta_t
-        h, p, current_time, eval_times, eval_ps = self.ode_step(h, p,
-                                                                timestep, current_time)
-        eval_times_total = torch.cat((eval_times_total, eval_times))
-        eval_vals_total = torch.cat((eval_vals_total, eval_ps))
-
-        # Storing the predictions
-        if return_path:
-            path_t.append(current_time)
-            path_p.append(p)
-            path_h.append(h)
-
-    loss = prejump_loss + self.mixing * postjump_loss
-
-    if smoother:
-        class_loss_vec += class_criterion(self.classification_model(h), labels).squeeze(1)
-        class_loss_vec /= num_evals_vec
-
-    class_pred = self.classification_model(h)
-
-    results = [h, loss, class_pred]
-    if return_path:
-        results.extend([np.array(path_t), torch.stack(path_p), torch.stack(path_h)])
-        if smoother:
-            results.extend([class_loss_vec])
-        else:
-            results.extend([eval_times_total, eval_vals_total])
-    else:
-        if smoother:
-            results.extend([class_loss_vec])
-        else:
-            results.extend([prejump_loss])
-    return results
+            if smoother:
+                results.extend([class_loss_vec])
+            else:
+                results.extend([prejump_loss])
+        return results
 
 
 def compute_KL_loss(p_obs: torch.Tensor, X_obs: torch.Tensor,
-                    M_obs: torch.Tensor, obs_noise_std: float = 1e-2,
-                    logvar: bool = True) -> float:
+                    M_obs: torch.Tensor, obs_noise_std: float=1e-2,
+                    logvar: bool=True) -> float:
     """
     Args:
         p_obs: 
