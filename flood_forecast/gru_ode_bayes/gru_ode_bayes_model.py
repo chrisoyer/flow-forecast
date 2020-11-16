@@ -14,7 +14,7 @@ class GRU_ODE_Bayes_Classifier(object):
              lr: float=0.001, full_gru_ode=True, no_cov: bool=True, 
              impute:bool=False, verbose: int=0, #from 0 to 3 (highest)
              T_val: int=150, max_val_samples: int=3, solver:str="euler",
-             device: Optional[str], delta_t:float=.05, T:int=50
+             device: Optional[str]=None, delta_t:float=.05, T:int=50
             ) -> None:
         """ The full GRU ODE Bayes model. Classifies time series (single series
         or sets of vectors)
