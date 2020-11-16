@@ -156,7 +156,7 @@ class ODE_Dataset(Dataset):
         self.data_df['Time'] = self.data_df.Time * t_mult
 
         @staticmethod
-        _def add_jitter(df:pd.DataFrame=None, jitter_time: float=1e-3):
+        def _add_jitter(df:pd.DataFrame=None, jitter_time: float=1e-3):
             """Modifies Double OU dataset, so that observations with both dimensions
             are split. One is randomly shifted earlier by amount 'jitter_time'.
             ## TODO: fix so 
