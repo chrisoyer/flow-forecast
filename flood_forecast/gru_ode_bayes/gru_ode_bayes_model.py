@@ -1,6 +1,6 @@
 import torch
 import gru_ode_bayes_model
-from . import gru_ode_bayes_data_utils as data_utils
+import gru_ode_bayes_data_utils as data_utils
 from typing import Optional
 
 class GRU_ODE_Bayes_Classifier(object):
