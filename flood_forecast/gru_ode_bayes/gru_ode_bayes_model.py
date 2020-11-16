@@ -97,7 +97,7 @@ class GRU_ODE_Bayes_Classifier(object):
                 'M_val': data["M_val"].to(device), 'times_val': data["times_val"],
                 'times_idx': data["index_val"]})
     
-    def _extract_from_path(t_vec:np.array, p_vec:np.array, eval_times:np.array,
+    def _extract_from_path(self, t_vec:np.array, p_vec:np.array, eval_times:np.array,
                            path_idx_eval:int) -> np.array:
         '''
         Arguments :
