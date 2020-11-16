@@ -193,7 +193,7 @@ class GRU_ODE_Bayes_Classifier(object):
         """
         return predictions
     
-    def save_model(self, file_path: str=None)
+    def save_model(self, file_path: str=None) -> None:
         """save model object to file_path. should be <filename>.pt"""
         torch.save(self.model.state_dict(), file_path)
         print(f"Saved model to '{file_path}'.")
