@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import gru_ode_bayes_model
 import gru_ode_bayes_data_utils as data_utils
