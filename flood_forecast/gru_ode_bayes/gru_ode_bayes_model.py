@@ -90,8 +90,8 @@ class GRU_ODE_Bayes_Classifier(object):
         into model"""
         self.data_load = {'times': data["times"], 'time_indices': data["time_indices"],
             'X': data["X"].to(self.device), 'M': data["M"].to(self.device),
-            'obs_idx': data["obs_idx"], 'delta_t'=data["delta_t"], 
-            'T'=data["T"], 'cov'=data["cov"].to(self.device)}
+            'obs_idx': data["obs_idx"], 'delta_t': data["delta_t"], 
+            'T': data["T"], 'cov': data["cov"].to(self.device)}
         if include_val:
             self.data_load.update({'X_val': data["X_val"].to(device), 
                 'M_val': data["M_val"].to(device), 'times_val': data["times_val"],
