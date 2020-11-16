@@ -6,15 +6,15 @@ from typing import Optional
 class GRU_ODE_Bayes_Classifier(object):
     """
     """
-    def __init__(self, "hidden_size": int=50, "p_hidden": int=25, 
-             "prep_hidden": int=10, "use_logvar": bool=True, "mixing": float=1e-4, 
-             "delta_t": float=0.1, "T"=200, "lambda_": float=0, #Weighting between classification and MSE loss.
-             "classification_hidden": int=2, "cov_hidden": int=50, 
-             "weight_decay": float=0.0001, "dropout_rate":float=0.2, 
-             "lr": float=0.001, "full_gru_ode"=True, "no_cov": bool=True, 
-             "impute":bool=False, "verbose" int=0, #from 0 to 3 (highest)
-             "T_val": int=150, "max_val_samples": int=3, "solver":str="euler",
-             "device": Optional[str], "delta_t":float=.05, "T":int=50
+    def __init__(self, hidden_size: int=50, p_hidden: int=25, 
+             prep_hidden: int=10, use_logvar: bool=True, mixing: float=1e-4, 
+             delta_t: float=0.1, T=200, lambda_: float=0, #Weighting between classification and MSE loss.
+             classification_hidden: int=2, cov_hidden: int=50, 
+             weight_decay: float=0.0001, dropout_rate:float=0.2, 
+             lr: float=0.001, full_gru_ode=True, no_cov: bool=True, 
+             impute:bool=False, verbose: int=0, #from 0 to 3 (highest)
+             T_val: int=150, max_val_samples: int=3, solver:str="euler",
+             device: Optional[str], delta_t:float=.05, T:int=50
             ) -> None:
         """ The full GRU ODE Bayes model. Classifies time series (single series
         or sets of vectors)
