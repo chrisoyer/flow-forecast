@@ -109,7 +109,7 @@ class GRU_ODE_Bayes_Classifier(object):
         Returns :
             Array of dimensions [L,(2xfeatures)] of means and logvar of the required eval times and trajectories
         '''
-            def _map_to_closest(input, reference):
+        def _map_to_closest(input, reference):
             output = np.zeros_like(input)
             for idx, element in enumerate(input):
                 closest_idx=np.abs(reference-element).argmin()
