@@ -1,0 +1,7 @@
+use single csv file input
+requirements first
+when initially make pull request - tests can fail due to api key requests
+w&b key errors arne't a problem
+json config: specific params for model. model params: intitialize. dataset params more standard, 
+CI tests: copy one of the existing json, modify to what my model needs
+don't need to add anything except json & circle CI
