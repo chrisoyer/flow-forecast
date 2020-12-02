@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from typing import Optional
 
-from gru_ode_bayes import gru_ode_bayes_modules as modules
+import gru_ode_bayes_modules as modules
 import gru_ode_bayes_data_utils as data_utils
 
 class GRU_ODE_Bayes_Classifier(object):
