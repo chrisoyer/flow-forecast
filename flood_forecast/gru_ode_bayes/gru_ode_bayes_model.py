@@ -75,12 +75,25 @@ class GRU_ODE_Bayes_Classifier(object):
         self.device = device if device else torch.device(
                             "cuda:0" if torch.cuda.is_available() else "cpu")
         self.delta_t = delta_t
-        self.model_attributes = ["hidden_size", "p_hidden", "prep_hidden",
-             "use_logvar", "mixing", "delta_t", "T", "lambda_",
-             "classification_hidden", "cov_hidden", "dropout_rate", 
-             "full_gru_ode", "no_cov", "impute", "T_val", 
-             "max_val_samples", "solver"] # clump these to pass to NNFOwithBayesianJumps
-        nnfobj_args = {attr: eval(f"self.{attr}") for attr in self.model_attributes}
+        self.nnfobj_args = {
+                    'hidden_size': self.hidden_size,
+                    'p_hidden': self.p_hidden,
+                    'prep_hidden': self.prep_hidden,
+                    'use_logvar': self.use_logvar,
+                    'mixing': self.mixing,
+                    'delta_t': self.delta_t,
+                    'T': self.T,
+                    'lambda_': self.lambda_,
+                    'classification_hidden': self.classification_hidden,
+                    'cov_hidden': self.cov_hidden,
+                    'dropout_rate': self.dropout_rate,
+                    'full_gru_ode': self.full_gru_ode,
+                    'no_cov': self.no_cov,
+                    'impute': self.impute,
+                    'T_val': self.T_val,
+                    'max_val_samples': self.max_val_samples,
+                    'solver': self.solver,
+                    }
         self.model = modules.NNFOwithBayesianJumps(**nnfobj_args)
         self.model = self.model.to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr,
