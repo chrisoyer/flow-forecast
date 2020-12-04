@@ -173,6 +173,8 @@ class NNFOwithBayesianJumps(torch.nn.Module):
         minimal: use minimal version of GRU-ODE cell
         solver: ["euler", "midpoint", "dopri5]
         impute:
+        store_hist: 
+        full_gru_ode: use full model
     Returns:
 
     """
@@ -181,12 +183,14 @@ class NNFOwithBayesianJumps(torch.nn.Module):
                  cov_size=1, cov_hidden=1, classification_hidden=1,
                  use_logvar=True,
                  mixing=1, dropout_rate: float = 0, minimal: bool = False,
-                 solver: str = "euler", impute=True, store_hist: bool = False):
+                 solver: str = "euler", impute=True, store_hist: bool = False, 
+                 full_gru_ode: bool=True):
         super().__init__()
 
         self.impute = impute
         self.use_logvar = use_logvar
         self.minimal = minimal
+        self.full_gru_ode = full_gru_ode
         self.p_model = torch.nn.Sequential(
             torch.nn.Linear(hidden_size, p_hidden, bias=bias),
             torch.nn.ReLU(),
@@ -201,7 +205,7 @@ class NNFOwithBayesianJumps(torch.nn.Module):
             torch.nn.Linear(classification_hidden, 1, bias=bias)
         )
         self.gru_c = _GRUODECell(input_size=2 * input_size, hidden_size=hidden_size,
-                                 bias=bias, impute=full_gru_ode)
+                                 bias=bias, impute=self.full_gru_ode)
         self.gru_obs = _GRUObservationCell(input_size, hidden_size, prep_hidden,
                                            bias=bias, use_logvar=self.use_logvar)
 
@@ -427,27 +431,6 @@ def compute_KL_loss(p_obs: torch.Tensor, X_obs: torch.Tensor,
              M_obs)
             .sum())
 
-
-class GRUODEBayesSeq(torch.nn.Module):
-    """On top of the architecture described in the main bulk of this paper, we 
-    also propose a variant which process the sporadic inputs sequentially. In 
-    other words, GRU-Bayes will update its prediction on the hidden h for one 
-    input dimension after the other rather than jointly. We call this approach
-    GRU-ODE-Bayes-seq."""
-
-    def __init__(self, input_size, hidden_size, p_hidden, prep_hidden, bias=True,
-                 cov_size=1, cov_hidden=1, classification_hidden=1, logvar=True,
-                 mixing=1, dropout_rate=0, obs_noise_std=1e-2, full_gru_ode=False):
-        super().__init__()
-        self.obs_noise_std = obs_noise_std
-        self.classification_model = torch.nn.Sequential(
-            torch.nn.Linear(hidden_size, classification_hidden, bias=bias),
-            torch.nn.ReLU(),
-            torch.nn.Dropout(p=dropout_rate),
-            torch.nn.Linear(classification_hidden, 1, bias=bias),
-        )
-        self.gru_c = _GRUODECell(input_size=2 * input_size, hidden_size=hidden_size,
-                                 bias=bias, impute=full_gru_ode)
 
 
 class SeqGRUBayes(torch.nn.Module):
