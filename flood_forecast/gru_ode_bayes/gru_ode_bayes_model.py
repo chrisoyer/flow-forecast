@@ -82,15 +82,11 @@ class GRU_ODE_Bayes_Classifier(object):
                     'prep_hidden': prep_hidden,
                     'use_logvar': use_logvar,
                     'mixing': mixing,
-                    'lambda_': lambda_,
                     'classification_hidden': classification_hidden,
                     'cov_hidden': cov_hidden,
                     'dropout_rate': dropout_rate,
-                    'full_gru_ode': full_gru_ode,
                     'no_cov': no_cov,
                     'impute': impute,
-                    'T_val': T_val,
-                    'max_val_samples': max_val_samples,
                     'solver': solver,
                     }
         self.model = modules.NNFOwithBayesianJumps(**self.nnfobj_args)
