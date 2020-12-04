@@ -60,6 +60,7 @@ class GRU_ODE_Bayes_Classifier(object):
         self.use_logvar = use_logvar
         self.mixing = mixing
         self.delta_t = delta_t
+        self.T = T
         self.lambda_ = lambda_
         self.classification_hidden = classification_hidden
         self.cov_hidden = cov_hidden
