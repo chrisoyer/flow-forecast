@@ -81,7 +81,8 @@ class GRU_ODE_Bayes_Classifier(object):
              "full_gru_ode", "no_cov", "impute", "T_val", 
              "max_val_samples", "solver"] # clump these to pass to NNFOwithBayesianJumps
         nnfobj_args = {attr: eval(f"self.{attr}") for attr in self.model_attributes}
-        self.model = modules.NNFOwithBayesianJumps(**nnfobj_args).to(self.device)
+        self.model = modules.NNFOwithBayesianJumps(**nnfobj_args)
+        self.model = self.model.to(self.device)
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr,
                             weight_decay=self.weight_decay)
 
