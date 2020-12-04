@@ -83,7 +83,6 @@ class GRU_ODE_Bayes_Classifier(object):
                     'prep_hidden': prep_hidden,
                     'use_logvar': use_logvar,
                     'mixing': mixing,
-                    'delta_t': delta_t,
                     'T': T,
                     'lambda_': lambda_,
                     'classification_hidden': classification_hidden,
