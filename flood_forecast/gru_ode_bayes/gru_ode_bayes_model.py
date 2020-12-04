@@ -8,7 +8,7 @@ from . import gru_ode_bayes_data_utils as data_utils
 class GRU_ODE_Bayes_Classifier(object):
     """
     """
-    def __init__(self, hidden_size: int=50, p_hidden: int=25, 
+    def __init__(self, input_size = 2, hidden_size: int=50, p_hidden: int=25, 
              prep_hidden: int=10, use_logvar: bool=True, mixing: float=1e-4, 
              delta_t: float=0.1, lambda_: float=0, #Weighting between classification and MSE loss.
              classification_hidden: int=2, cov_hidden: int=50, 
@@ -29,6 +29,7 @@ class GRU_ODE_Bayes_Classifier(object):
         Parameters:
         ____________
         ~Model Parameters~: Passed to create model
+            input_size:    output size of cells - ??? not sure of naming on this
             hidden_size:   width of hidden layer in several locations
             p_hidden:      width of second layer down
             prep_hidden:   something to do with GRU obvservation cell
@@ -78,12 +79,12 @@ class GRU_ODE_Bayes_Classifier(object):
                             "cuda:0" if torch.cuda.is_available() else "cpu")
         self.delta_t = delta_t
         self.nnfobj_args = {
+                    'input_size': input_size,
                     'hidden_size': hidden_size,
                     'p_hidden': p_hidden,
                     'prep_hidden': prep_hidden,
                     'use_logvar': use_logvar,
                     'mixing': mixing,
-                    'T': T,
                     'lambda_': lambda_,
                     'classification_hidden': classification_hidden,
                     'cov_hidden': cov_hidden,
