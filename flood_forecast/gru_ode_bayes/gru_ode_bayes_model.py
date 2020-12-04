@@ -54,7 +54,6 @@ class GRU_ODE_Bayes_Classifier(object):
             verbose: int, 1, 2, 3
         
         """
-        import ipdb; ipdb.set_trace()
         self.hidden_size = hidden_size
         self.p_hidden = p_hidden
         self.prep_hidden = prep_hidden
