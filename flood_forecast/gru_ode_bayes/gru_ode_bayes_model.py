@@ -85,7 +85,6 @@ class GRU_ODE_Bayes_Classifier(object):
                     'classification_hidden': classification_hidden,
                     'cov_hidden': cov_hidden,
                     'dropout_rate': dropout_rate,
-                    'no_cov': no_cov,
                     'impute': impute,
                     'solver': solver,
                     }
